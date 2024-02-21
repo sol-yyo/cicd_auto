@@ -12,7 +12,7 @@ EXPOSED_VARIABLES_FOUND=false
 # Loop through each source file extension
 for EXTENSION in "${SOURCE_FILE_EXTENSIONS[@]}"; do
     # Find all files with the current extension and search for sensitive variables
-    FILES_WITH_SENSITIVE_VARIABLES=$(grep -rnw . -e "${SENSITIVE_VARIABLES[@]}" --include="*.${EXTENSION}" 2>/dev/null | grep -E '\b(var|let|const)\s+\w+\s*=\s*["'\'']?(PASSWORD|SECRET|TOKEN)["'\'']?;')
+    FILES_WITH_SENSITIVE_VARIABLES=$(grep -rnw . -e "${SENSITIVE_VARIABLES[@]}" --include="*.${EXTENSION}" 2>/dev/null | grep -Ev '\b(var|let|const)\s+\w+\s*=\s*(process\.env\.(API_KEY|PASSWORD|SECRET)|["'\'']\w*["'\''])\s*;'
     if [ -n "$FILES_WITH_SENSITIVE_VARIABLES" ]; then
         # Print files and lines containing sensitive variables
         echo "Exposed sensitive variables found in ${EXTENSION} files:"
