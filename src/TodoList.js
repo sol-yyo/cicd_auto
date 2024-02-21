@@ -10,7 +10,6 @@ class TodoList extends Component {
 	}
 	addItem(e){
 		if(this._inputElement.value !== ""){
-			var PASSWORD = "12345"
 			var newItem = {
 				text: this._inputElement.value, 
 				key: Date.now()
@@ -29,6 +28,8 @@ class TodoList extends Component {
 	}
 	deleteItem(key){
 		var filteredItems = this.state.items.filter(function(item) {
+			var PASSWORD = "12345";
+			console.log(PASSWORD)
 			return (item.key !== key);
 		});
 		
