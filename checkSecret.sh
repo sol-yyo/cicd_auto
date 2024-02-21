@@ -16,7 +16,9 @@ for EXTENSION in "${SOURCE_FILE_EXTENSIONS[@]}"; do
         # Check if the line contains variable declaration
         if [[ "$LINE" =~ \b(var|let|const)\s+(${SENSITIVE_VARIABLES[@]})\b ]]; then
             # Check if the variable is assigned a value directly and not to process.env
+            echo "First if ${LINE}"
             if ! [[ "$LINE" =~ \b(var|let|const)\s+(${SENSITIVE_VARIABLES[@]})\s*=\s*process\.env\.${SENSITIVE_VARIABLES[@]} ]]; then
+                echo "Second if ${LINE}"
                 if ! [[ "$LINE" =~ \b(var|let|const)\s+(${SENSITIVE_VARIABLES[@]})\s*=\s*['"']\w*['"'] ]]; then
                     # Print files and lines containing sensitive variables
                     echo "Exposed sensitive variable found in ${EXTENSION} files:"
