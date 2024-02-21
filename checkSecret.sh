@@ -12,14 +12,19 @@ EXPOSED_VARIABLES_FOUND=false
 # Loop through each source file extension
 for EXTENSION in "${SOURCE_FILE_EXTENSIONS[@]}"; do
     # Find all files with the current extension and search for sensitive variables
-    FILES_WITH_SENSITIVE_VARIABLES=$(grep -rnw . -e "${SENSITIVE_VARIABLES[@]}" --include="*.${EXTENSION}" 2>/dev/null | grep -Ev '\b(var|let|const)\s+\w+\s*=\s*(process\.env\.(API_KEY|PASSWORD|SECRET)|["'\'']\w*["'\''])\s*;')
-    if [ -n "$FILES_WITH_SENSITIVE_VARIABLES" ]; then
-        # Print files and lines containing sensitive variables
-        echo "Exposed sensitive variables found in ${EXTENSION} files:"
-        echo "$FILES_WITH_SENSITIVE_VARIABLES"
-        # Set the flag to true if sensitive variables are found
-        EXPOSED_VARIABLES_FOUND=true
-    fi
+    while IFS= read -r LINE; do
+        # Check if the line contains variable declaration
+        if [[ "$LINE" =~ \b(var|let|const)\s+(${SENSITIVE_VARIABLES[@]})\b ]]; then
+            # Check if the variable is assigned a value directly, excluding process.env assignments
+            if ! [[ "$LINE" =~ \b(var|let|const)\s+(${SENSITIVE_VARIABLES[@]})\s*=\s*(process\.env\.(${SENSITIVE_VARIABLES[@]})|['\"]\w*['\"])\s*; ]]; then
+                # Print files and lines containing sensitive variables
+                echo "Exposed sensitive variable found in ${EXTENSION} files:"
+                echo "$LINE"
+                # Set the flag to true if sensitive variables are found
+                EXPOSED_VARIABLES_FOUND=true
+            fi
+        fi
+    done < <(grep -rnw . --include="*.${EXTENSION}" -e "${SENSITIVE_VARIABLES[@]}" 2>/dev/null)
 done
 
 # Return appropriate exit code based on whether exposed variables are found
