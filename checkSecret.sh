@@ -12,9 +12,10 @@ EXPOSED_VARIABLES_FOUND=false
 # Loop through each source file extension
 for EXTENSION in "${SOURCE_FILE_EXTENSIONS[@]}"; do
     # Find all files with the current extension and search for sensitive variables
-    echo "$EXTENTION"
+    echo "Extension: $EXTENTION"
     while IFS= read -r LINE; do
         # Check if the line contains variable declaration
+        echo "Line: $LINE"
         if [[ "$LINE" =~ \b(var|let|const)\s+(${SENSITIVE_VARIABLES[@]})\b ]]; then
             # Check if the variable is assigned a value directly and not to process.env
             echo "First if ${LINE}"
