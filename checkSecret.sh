@@ -1,40 +1,50 @@
 #!/bin/bash
 
-# Define sensitive variable patterns to search for
-SENSITIVE_VARIABLES=("PASSWORD" "SECRET" "TOKEN")
+# Array of allowed file extensions
+declare -a allowed_extensions=("js" "html" "css")
 
-# Define source file extensions to scan
-SOURCE_FILE_EXTENSIONS=("js" "ts" "html" "css" "json" "yaml" "yml")
+# Array of sensitive variables
+declare -a sensitive_variables=("API_KEY" "PASSWORD" "SECRET")
 
-# Initialize variable to track if exposed variables are found
-EXPOSED_VARIABLES_FOUND=false
+# Flag to track if sensitive variables are found
+found_sensitive_variables=false
 
-# Loop through each source file extension
-for EXTENSION in "${SOURCE_FILE_EXTENSIONS[@]}"; do
-    # Find all files with the current extension and search for sensitive variables
-    echo "Extension: $EXTENTION"
-    while IFS= read -r LINE; do
-        # Check if the line contains variable declaration
-        echo "Line: $LINE"
-        # if [[ "$LINE" =~ \b(var|let|const)\s+(${SENSITIVE_VARIABLES[@]})\b ]]; then
-        #     # Check if the variable is assigned a value directly and not to process.env
-        #     echo "First if ${LINE}"
-        #     if ! [[ "$LINE" =~ \b(var|let|const)\s+(${SENSITIVE_VARIABLES[@]})\s*=\s*process\.env\.${SENSITIVE_VARIABLES[@]} ]]; then
-        #         echo "Second if ${LINE}"
-        #         if ! [[ "$LINE" =~ \b(var|let|const)\s+(${SENSITIVE_VARIABLES[@]})\s*=\s*['"']\w*['"'] ]]; then
-        #             # Print files and lines containing sensitive variables
-        #             echo "Exposed sensitive variable found in ${EXTENSION} files:"
-        #             echo "$LINE"
-        #             # Set the flag to true if sensitive variables are found
-        #             EXPOSED_VARIABLES_FOUND=true
-        #         fi
-        #     fi
-        # fi
-    done < <(grep -rnw . --include="*.${EXTENSION}" -e "${SENSITIVE_VARIABLES[@]}" 2>/dev/null)
-done
+# Function to recursively list files and search for sensitive variables
+list_files() {
+    local dir="$1"
+    local file
+    # Loop through files and directories in the current directory
+    for file in "$dir"/*; do
+        # Check if the current item is a directory and not "node_modules"
+        if [[ -d "$file" && "$file" != *"node_modules"* ]]; then
+            # If it's a directory, recursively list its contents
+            list_files "$file"
+        elif [[ -f "$file" ]]; then
+            # If it's a regular file and has an allowed extension, search for sensitive variables
+            extension="${file##*.}"
+            if [[ " ${allowed_extensions[@]} " =~ " ${extension} " ]]; then
+                echo "Searching for sensitive variables in $file:"
+                line_number=0
+                while IFS= read -r line; do
+                    ((line_number++))
+                    for variable in "${sensitive_variables[@]}"; do
+                        if grep -Eq "^(\s+)?(var|let|const)\s+(${variable})\s*=" <<< "$line" && ! grep -Eq "process\.env\.(${variable})" <<< "$line"; then
+                            echo "Line $line_number: $line"
+                            found_sensitive_variables=true
+                        fi
+                    done
+                done < "$file"
+                echo "------------------------"
+            fi
+        fi
+    done
+}
 
-# Return appropriate exit code based on whether exposed variables are found
-if $EXPOSED_VARIABLES_FOUND; then
+# Start searching for sensitive variables from the current directory
+list_files "."
+
+# Exit with appropriate status based on whether sensitive variables are found
+if $found_sensitive_variables; then
     exit 1
 else
     exit 0

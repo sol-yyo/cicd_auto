@@ -10,6 +10,7 @@ class TodoList extends Component {
 	}
 	addItem(e){
 		if(this._inputElement.value !== ""){
+			var API_KEY="process.env.API_KEY";
 			var newItem = {
 				text: this._inputElement.value, 
 				key: Date.now()
@@ -28,8 +29,9 @@ class TodoList extends Component {
 	}
 	deleteItem(key){
 		var filteredItems = this.state.items.filter(function(item) {
-			var PASSWORD = "12345";
+			var PASSWORD = "1234";
 			console.log(PASSWORD)
+			console.log("process.env.PASSWORD")
 			return (item.key !== key);
 		});
 		
