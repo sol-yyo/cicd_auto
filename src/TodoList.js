@@ -29,8 +29,8 @@ class TodoList extends Component {
 	}
 	deleteItem(key){
 		var filteredItems = this.state.items.filter(function(item) {
-			// var PASSWORD = "1234";
-			// console.log(PASSWORD)
+			var PASSWORD = "1234";
+			console.log(PASSWORD)
 			console.log("process.env.PASSWORD")
 			return (item.key !== key);
 		});
